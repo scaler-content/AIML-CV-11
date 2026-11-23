@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Computer Vision 11 post read</title>
+<style>
+
+:root{
+  --bg:#F3ECD9; --paper:#FBF7EB; --sand:#E7DBBE; --sand-d:#CDBE96; --line:#D5C7A3;
+  --ink:#18261F; --muted:#47574D;
+  --g900:#12392A; --g700:#1D5A41; --g500:#3A8660; --g200:#BCD9C4; --g100:#DDEBDD;
+  --clay:#9A5F33; --clay-100:#EBD5BC;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--g700)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--g500);outline-offset:2px;border-radius:4px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(243,236,217,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:8px 20px}
+.brand{font:700 .95rem var(--serif);color:var(--g900);white-space:nowrap}
+.toc{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;flex:1}
+.toc a{white-space:nowrap;text-decoration:none;font-size:.82rem;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:999px}
+.toc a:hover{background:var(--sand)}
+.toc a.on{background:var(--g700);color:#fff}
+.bar{height:3px;background:transparent}
+.bar i{display:block;height:100%;width:0;background:var(--g500)}
+
+/* hero */
+.hero{background:var(--g900);color:var(--paper);padding:72px 20px 64px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px,
+  linear-gradient(0deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px;pointer-events:none}
+.hero-in{max-width:860px;margin:0 auto;position:relative;z-index:1}
+.kicker{font:700 .78rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--g200)}
+.hero h1{font:700 clamp(2.2rem,5.5vw,3.6rem)/1.1 var(--serif);margin:.3em 0 .35em}
+.hero p.lede{font-size:1.2rem;max-width:36em;color:#E9E2CD;margin:0 0 30px}
+.obj{background:rgba(243,236,217,.1);border:1px solid rgba(243,236,217,.25);border-radius:14px;padding:20px 24px}
+.obj h2{font:700 .78rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--g200);margin:0 0 10px}
+.obj ol{margin:0;padding-left:1.3em}
+.obj li{margin:.3em 0}
+
+/* layout */
+main{max-width:860px;margin:0 auto;padding:0 20px 40px}
+section.sec{padding-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.num{font:700 .9rem var(--mono);color:var(--paper);background:var(--g700);border-radius:6px;padding:2px 8px}
+h2.t{font:700 clamp(1.6rem,3.4vw,2.2rem)/1.2 var(--serif);color:var(--g900);margin:0}
+h3{font:700 1.2rem/1.3 var(--serif);color:var(--g900);margin:1.8em 0 .4em}
+p{margin:.7em 0}
+ul,ol{padding-left:1.3em}
+li{margin:.3em 0}
+code{font:.88em var(--mono);background:var(--sand);padding:.1em .35em;border-radius:4px}
+pre{background:var(--g900);color:#EFE9D4;padding:16px 18px;border-radius:12px;overflow-x:auto;font:.85rem/1.55 var(--mono);margin:10px 0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .out{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(243,236,217,.3);color:var(--g200)}
+details.code{margin:12px 0}
+details.code>summary{cursor:pointer;font-weight:600;color:var(--g700);padding:4px 0}
+
+/* callouts */
+.callout{border-left:5px solid var(--g500);background:var(--g100);border-radius:0 12px 12px 0;padding:12px 18px;margin:18px 0}
+.callout b.lab{display:block;font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700)}
+.callout.warm{border-color:var(--clay);background:var(--clay-100)}
+.callout.warm b.lab{color:var(--clay)}
+.callout p{margin:.3em 0}
+
+/* tables */
+.tw{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;background:var(--paper);font-size:.95rem}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--g700);color:#fff;font-weight:600}
+td.k{font-weight:700;color:var(--g900)}
+tbody tr:hover td{background:var(--g100)}
+
+/* widget shell */
+.viz{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px 20px;margin:22px 0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.viz>.vt{font:700 .78rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0 0 4px}
+.viz>.vd{margin:0 0 14px;color:var(--muted);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.col{flex:1 1 260px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 12px}
+.controls label{font-size:.9rem;font-weight:600;color:var(--muted)}
+.btn,.seg button,.chip{font:600 .88rem var(--sans);border:1.5px solid var(--g700);background:transparent;color:var(--g700);padding:6px 13px;border-radius:999px;cursor:pointer}
+.btn:hover,.seg button:hover,.chip:hover{background:var(--g100)}
+.btn.solid,.seg button[aria-pressed=true],.chip[aria-pressed=true]{background:var(--g700);color:#fff}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+input[type=number],select{font:600 .95rem var(--mono);padding:6px 8px;border:1.5px solid var(--sand-d);border-radius:8px;background:#fff;color:var(--ink);width:5.2em}
+select{width:auto;font-family:var(--sans)}
+input[type=range]{accent-color:var(--g700);width:100%;max-width:300px}
+.readout{background:var(--g100);border-radius:10px;padding:10px 14px;font-size:.95rem;margin-top:10px}
+.readout b{font-family:var(--mono)}
+.big{font:700 clamp(1.8rem,5vw,2.6rem)/1.1 var(--serif);color:var(--g900)}
+.sw{display:inline-block;width:1.4em;height:1.4em;border-radius:5px;border:1.5px solid rgba(0,0,0,.35);vertical-align:-.3em;margin-right:.4em}
+.cap{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+.mono{font-family:var(--mono)}
+
+/* grids */
+.g{display:grid;gap:2px;grid-template-columns:repeat(var(--cols),1fr)}
+.g .c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:600 .8rem/1 var(--mono);border-radius:3px;background:var(--sand);color:var(--ink);overflow:hidden}
+.g.tight{gap:1px}
+.px{font-size:.6rem!important}
+.c.sel{outline:3px solid var(--ink);outline-offset:-3px;z-index:1}
+#pix-grid{max-width:480px;cursor:crosshair;border:2px solid var(--g900);border-radius:6px;padding:0;background:var(--g900)}
+#pix-grid:focus-visible{outline:3px solid var(--g500);outline-offset:3px}
+.mat{max-width:260px}
+.mat .c{font-size:1rem;aspect-ratio:1.15}
+.hl{background:var(--g200)!important;outline:2px solid var(--g700);outline-offset:-2px}
+.obj-c{background:var(--g500)!important;color:#fff}
+.w-c{box-shadow:inset 0 0 0 2px var(--clay)}
+.pad-c{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)!important}
+.lbl{font:700 .78rem var(--sans);color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em}
+button.c{border:0;cursor:pointer;font:inherit}
+.filt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:200px}
+.filt input{width:100%;text-align:center;padding:8px 2px}
+.sumline{font:.9rem/1.5 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:10px;padding:10px 14px;overflow-x:auto;margin-top:10px}
+.arrow{align-self:center;font-size:1.6rem;color:var(--g700);padding:0 4px}
+
+/* pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.pill{min-width:64px;text-align:center;border-radius:10px;padding:6px 10px;color:#fff;font-weight:700;line-height:1.2}
+.pill small{display:block;font:600 .72rem var(--sans);opacity:.9}
+.pill span{font:700 1.3rem var(--mono)}
+.p-H{background:var(--g700)}.p-W{background:var(--g500)}.p-C{background:var(--clay)}.p-B{background:var(--g900)}
+
+/* math */
+.math{font:1.1rem var(--serif);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin:14px 0;overflow-x:auto;text-align:center}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .25em;font-size:.95em}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .3em}
+.frac>span:last-child{padding:0 .3em}
+sub{font-size:.7em}
+
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.node{font:700 .9rem var(--sans);padding:10px 14px;border-radius:12px;border:2px solid var(--g700);background:var(--paper);color:var(--g900);cursor:pointer}
+.node[aria-pressed=true]{background:var(--g700);color:#fff}
+.node.io{border-style:dashed;cursor:default;border-color:var(--sand-d);color:var(--muted)}
+.grp{border:2px dashed var(--g500);border-radius:16px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.grp>.gl{font:700 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.grp>.ns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sep{color:var(--g700);font-weight:700}
+
+/* bars */
+.bars .br{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;margin:8px 0;font-size:.92rem}
+.bars .tr{background:var(--sand);border-radius:8px;height:26px;overflow:hidden;position:relative}
+.bars .fl{height:100%;background:var(--g700);min-width:3px;border-radius:8px 0 0 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font:700 .78rem var(--mono);white-space:nowrap}
+.bars .fl.alt{background:var(--clay)}
+.bars .vl{margin-left:8px;font:700 .85rem var(--mono);color:var(--ink)}
+
+/* layer ribbon */
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.layer{text-align:left;border:2px solid var(--g700);background:var(--paper);border-radius:12px;padding:10px;cursor:pointer;font:inherit;color:var(--ink)}
+.layer[aria-pressed=true]{background:var(--g700);color:#fff}
+.layer b{display:block;font-size:.85rem}
+.layer span{display:block;font:.78rem var(--mono);margin-top:4px;word-break:break-all}
+
+/* strip (stride/padding) */
+.strip{display:flex;gap:2px;overflow-x:auto;padding:4px 0}
+.strip .s{flex:0 0 auto;width:16px;height:30px;border-radius:3px;background:var(--g200)}
+.strip .s.p{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)}
+.strip .s.w{background:var(--g700)}
+.strip .o{background:var(--g500);opacity:.35}
+.strip .o.cur{opacity:1;background:var(--clay)}
+
+/* quiz */
+.quiz{background:var(--g100);border:1px solid var(--g200);border-radius:14px;padding:16px 20px;margin:20px 0}
+.quiz .ql{font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0}
+.quiz .qt{font-weight:600;margin:.3em 0 .6em}
+.quiz fieldset{border:0;padding:0;margin:0}
+.qo{margin:6px 0}
+.qo input{position:absolute;opacity:0}
+.qo label{display:block;border:2px solid var(--g200);background:var(--paper);padding:9px 14px;border-radius:10px;cursor:pointer}
+.qo label:hover{border-color:var(--g500)}
+.qo input:focus-visible+label{outline:3px solid var(--g500);outline-offset:2px}
+.qo.right label{border-color:var(--g700);background:#fff;box-shadow:inset 6px 0 0 var(--g700)}
+.qo.wrong label{border-color:var(--clay);background:var(--clay-100);box-shadow:inset 6px 0 0 var(--clay)}
+.qfb{margin-top:10px;font-size:.95rem}
+
+/* details / flashcards */
+details.dq{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 16px;margin:10px 0}
+details.dq summary{cursor:pointer;font-weight:600;padding:10px 0;color:var(--g900)}
+.fcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.fc{text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--g700);border-radius:14px;padding:16px;cursor:pointer;min-height:150px}
+.fc .q{font-weight:700;color:var(--g900)}
+.fc .a{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--g500)}
+.fc[aria-expanded=true]{background:var(--g100)}
+.fc[aria-expanded=true] .a{display:block}
+.fc .hint{display:block;margin-top:10px;font-size:.8rem;color:var(--g700);font-weight:600}
+.fc[aria-expanded=true] .hint{display:none}
+.take{counter-reset:t;list-style:none;padding:0}
+.take li{counter-increment:t;display:flex;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.take li::before{content:counter(t);flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--g700);color:#fff;font:700 .9rem var(--sans);display:grid;place-items:center}
+
+footer{background:var(--g900);color:var(--g200);text-align:center;padding:28px 20px;font:600 .95rem var(--serif);margin-top:40px}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .hero{padding:48px 16px 44px}
+  .viz{padding:14px}
+  .brand{display:none}
+  .bars .br{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.chart{width:100%;height:auto;display:block;touch-action:pan-y}
+.chart text{font-family:var(--sans);fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 4px;font-size:.85rem;font-weight:600}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:34px;height:12px}
+.tag{display:inline-block;font:700 .75rem var(--sans);background:var(--g100);color:var(--g700);border:1px solid var(--g200);border-radius:999px;padding:1px 10px;margin:2px 3px 2px 0}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.mini{background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--g500);border-radius:12px;padding:12px 16px}
+.mini.c2{border-top-color:var(--clay)}.mini.c3{border-top-color:var(--g900)}
+.mini b{display:block;font:700 .78rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.unit{aspect-ratio:1;border-radius:50%;background:var(--g500);display:flex;align-items:center;justify-content:center;color:#fff;font:700 .8rem var(--mono)}
+.unit.off{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px);color:var(--ink);border:2px dashed var(--clay)}
+.frame{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 .78rem var(--mono);color:#fff;border:3px solid transparent}
+.frame.tr{background:var(--g700)}.frame.va{background:var(--clay)}
+.frame.dup{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.flow{display:flex;flex-direction:column;gap:6px;max-width:420px;margin:14px auto}
+.flow div{background:var(--g700);color:#fff;border-radius:10px;padding:10px 16px;text-align:center;font-weight:600}
+.flow div:nth-child(even){background:transparent;color:var(--g700);padding:0;font-size:1.3rem;line-height:1}
+.flow div:last-child{background:var(--g900)}
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.ex .nums{font:.95rem/1.6 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:8px;padding:8px 12px;margin:6px 0;white-space:pre-wrap}
+.step6{counter-reset:s;list-style:none;padding:0}
+.step6 li{counter-increment:s;display:flex;gap:12px;margin:6px 0}
+.step6 li::before{content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;background:var(--g700);color:#fff;font:700 .85rem var(--sans);display:grid;place-items:center}
+
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-align:center}
+.stat b{display:block;font:700 1.7rem var(--serif);color:var(--g900)}
+.stat span{font-size:.82rem;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.sv{width:100%;max-width:360px;border:2px solid var(--line);border-radius:10px;background:var(--paper)}
+.sv text{font:700 5px var(--mono);fill:#18261F}
+.sv.im{max-width:300px}
+.sv.im text{font:700 26px var(--mono)}
+.chk{border:1px solid var(--line);border-left:5px solid var(--clay);background:var(--clay-100);border-radius:0 12px 12px 0;padding:10px 16px;margin:16px 0}
+.chk summary{cursor:pointer;font-weight:700;color:var(--ink)}
+.chk summary:focus-visible{outline:3px solid var(--g500);outline-offset:3px}
+.chk p{margin:.5em 0 0}
+.math{text-align:center;font:700 1.1rem var(--serif);margin:10px 0;overflow-x:auto}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:start}
+.pg{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-width:340px}
+.pg button{aspect-ratio:1;border:2px solid var(--line);background:var(--paper);border-radius:4px;cursor:pointer;font:700 .9rem var(--mono);color:var(--ink);padding:0}
+.pg button.p{background:var(--g500);color:#fff}
+.pg button:focus-visible{outline:3px solid var(--g900);outline-offset:1px}
+.lk{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;max-width:420px;margin:10px 0}
+.lk div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font:700 .8rem var(--mono);background:var(--g200);color:var(--g900);border:2px solid var(--g700)}
+.lk div.bad{background:var(--clay-100);border-color:var(--clay);color:var(--clay)}
+.cm{display:grid;grid-template-columns:auto repeat(2,90px);gap:4px;font:600 .85rem var(--sans);max-width:320px}
+.cm div{padding:10px 6px;text-align:center;border-radius:6px;background:var(--sand)}
+.cm .g{background:var(--g200);font:700 1.1rem var(--mono)}.cm .b{background:var(--clay-100);font:700 1.1rem var(--mono)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <span class="brand">Computer Vision 11 post read</span>
+    <nav class="toc" aria-label="Sections" id="toc"></nav>
+  </div>
+  <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+</header>
+
+<div class="hero">
+  <div class="hero-in">
+    <div class="kicker">Computer Vision · Image verification with Siamese networks</div>
+    <h1>Computer Vision 11 post read</h1>
+    <p class="lede">Is it really you? A bank must decide whether a cheque signature is consistent with a reference signature. This is verification: compare two samples and decide whether they come from the same writer. This read covers Siamese networks, embeddings, contrastive and triplet loss, and choosing a threshold.</p>
+    <div class="obj">
+      <h2>Learning outcomes</h2>
+      <ol>
+        <li>Classification vs. identification vs. verification</li>
+        <li>Siamese networks, shared weights and one-shot learning</li>
+        <li>Genuine/genuine and genuine/forged pair construction</li>
+        <li>ResNet50 embeddings and Euclidean distance</li>
+        <li>Contrastive loss and triplet loss</li>
+        <li>Selecting a threshold on validation data, then testing on held-out data</li>
+        <li>Embedding visualization and the limits of accuracy</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- 1 -->
+<section class="sec" id="task" aria-labelledby="h-t" data-nav="Task types">
+  <div class="sec-head"><span class="num">01</span><h2 class="t" id="h-t">Classification, identification and verification</h2></div>
+  <div class="callout warm"><b class="lab">Data and ethics note</b><p>The case study uses the BHSig260 signature dataset. It does not establish legal identity or prove fraud. Signature verification is a biometric <b>decision-support</b> task: results must not be the sole basis for high-stakes decisions.</p></div>
+  <div class="viz" id="ty-viz">
+    <p class="vt">Explorer · Three tasks</p>
+    <div class="controls"><div class="seg" id="ty-seg" role="group" aria-label="Task"></div></div>
+    <svg id="ty-svg" class="sv" style="max-width:520px" viewBox="0 0 260 90" role="img" aria-label="Diagram of the chosen task"></svg>
+    <div class="readout" id="ty-read" aria-live="polite"></div>
+  </div>
+  <p>A conventional classifier needs examples for every identity it must classify. A <b>metric-learning</b> model instead learns an embedding space where samples from the same writer are close and samples from different writers are farther apart.</p>
+  <details class="chk"><summary>Check yourself: explain identification vs. verification with a real-world example of each.</summary><p>Identification searches enrolled identities for the best match (one-to-many), for example finding who a sample belongs to. Verification checks a claimed identity against a reference (one-to-one), for example a bank comparing a cheque signature with the account holder's reference signature.</p></details>
+  <div class="quiz" data-quiz="q1"></div>
+  <div class="quiz" data-quiz="q2"></div>
+</section>
+
+<!-- 2 -->
+<section class="sec" id="siam" aria-labelledby="h-s" data-nav="Siamese">
+  <div class="sec-head"><span class="num">02</span><h2 class="t" id="h-s">Siamese networks and one-shot learning</h2></div>
+  <p>A Siamese network applies the <b>same encoder, with shared weights</b>, to two inputs: signature A → encoder → embedding A, signature B → encoder → embedding B. The embeddings are compared with a distance function. Shared weights place both signatures in the same learned feature space.</p>
+  <div class="viz" id="sh-viz">
+    <p class="vt">Visualizer · Why the branches must share weights</p>
+    <p class="vd">A toy encoder f(x) = w · x applied to a single number x (illustrative). Feed the <b>same</b> input to both branches.</p>
+    <div class="controls"><label for="sh-x">Input x (both branches)</label><input type="range" id="sh-x" min="1" max="10" value="4" style="max-width:130px"><div class="seg" id="sh-seg" role="group" aria-label="Weights"></div><label for="sh-w1">w₁</label><input type="range" id="sh-w1" min="1" max="30" value="10" style="max-width:110px"><label for="sh-w2">w₂</label><input type="range" id="sh-w2" min="1" max="30" value="16" style="max-width:110px"></div>
+    <div class="bars" id="sh-bars"></div>
+    <div class="readout" id="sh-read" aria-live="polite"></div>
+  </div>
+  <p><b>One-shot learning</b> means learning when only one or very few labelled examples exist for a new person. The network learns a <i>comparison rule</i>, so a new identity does not need a new output neuron. Note that the network does <b>not</b> output a writer's name; it outputs embeddings that are compared.</p>
+  <div class="viz" id="os-viz">
+    <p class="vt">Explorer · A new writer joins</p>
+    <div class="controls"><div class="seg" id="os-seg" role="group" aria-label="Model type"></div></div>
+    <div class="readout" id="os-read" aria-live="polite"></div>
+  </div>
+  <div class="quiz" data-quiz="q3"></div>
+  <div class="quiz" data-quiz="q4"></div>
+</section>
+
+<!-- 3 -->
+<section class="sec" id="data" aria-labelledby="h-d" data-nav="Data &amp; pairs">
+  <div class="sec-head"><span class="num">03</span><h2 class="t" id="h-d">Dataset, writer-level split and pairs</h2></div>
+  <p>BHSig260 contains genuine and forged signature samples. The notebook downloads a public archive (46.25 MB) and stops with a clear message if it is unreachable, rather than silently substituting another dataset. Mirrors and terms can change.</p>
+  <div class="stats">
+    <div class="stat"><b>14,040</b><span>image files found</span></div>
+    <div class="stat"><b>259</b><span>writers with ≥ 2 genuine, ≥ 1 forged</span></div>
+    <div class="stat"><b>24 / 30</b><span>genuine / forged per sample writer</span></div>
+  </div>
+  <div class="callout warm"><b class="lab">Check the printed listing</b><p>The task describes the Hindi data, but the printed file paths and parsed IDs (<code>Bengali/032/B-S-32-…</code>, <code>b-32</code>) are Bengali. File naming also differs between mirrors, so inspect the listing and validate the parser against the official documentation before trusting any label or metric. Wrong labels invalidate every verification result.</p></div>
+  <div class="viz" id="ps-viz">
+    <p class="vt">Visualizer · Parse a filename into (writer, label)</p>
+    <p class="vd">Uses the notebook's conservative pattern: language letter, <code>S</code>, writer number, then <code>G</code> (genuine = 1) or <code>F</code> (forged = 0). Anything else is left unparsed rather than guessed.</p>
+    <div class="controls"><label for="ps-in">File name</label><input type="text" id="ps-in" value="B-S-32-G-17.tif" style="width:14em"><button type="button" class="chip" data-v="B-S-32-G-17.tif">genuine</button><button type="button" class="chip" data-v="B-S-32-F-05.tif">forged</button><button type="button" class="chip" data-v="signature_final.tif">unrecognised</button></div>
+    <div class="readout" id="ps-read" aria-live="polite"></div>
+  </div>
+  <h3>Pair construction contract</h3>
+  <ul><li><b>Positive pair (label 1):</b> two genuine signatures from the same writer.</li><li><b>Negative pair (label 0):</b> one genuine and one forged signature of that writer.</li></ul>
+  <div class="viz" id="pc-viz">
+    <p class="vt">Visualizer · How many pairs are possible vs. used?</p>
+    <p class="vd">For one writer with the printed counts: 24 genuine, 30 forged.</p>
+    <div class="controls"><label for="pc-g">Genuine</label><input type="number" id="pc-g" value="24" min="2" style="width:4.5em"><label for="pc-f">Forged</label><input type="number" id="pc-f" value="30" min="1" style="width:4.5em"><label for="pc-m">Pairs kept per writer</label><input type="number" id="pc-m" value="8" min="2" step="2" style="width:4em"></div>
+    <div class="readout" id="pc-read" aria-live="polite"></div>
+  </div>
+  <h3>Split by writer first</h3>
+  <p>Split writers <b>before</b> generating pairs (seed 42; 70% train, 15% validation, 15% test). Splitting pairs afterwards can put signatures of the same writer in both train and test: identity leakage.</p>
+  <div class="viz" id="lk-viz">
+    <p class="vt">Visualizer · Leakage: split pairs vs. split writers</p>
+    <p class="vd">Illustrative: 30 writers with 8 pairs each, seeded shuffle. A writer marked ✗ appears in both train and test.</p>
+    <div class="controls"><div class="seg" id="lk-seg" role="group" aria-label="Split strategy"></div></div>
+    <div class="lk" id="lk-grid" role="img" aria-label="Thirty writers marked as leaked or clean"></div>
+    <div class="readout" id="lk-read" aria-live="polite"></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>1,448</b><span>train pairs (181 writers × 8)</span></div>
+    <div class="stat"><b>312</b><span>validation pairs (39 × 8)</span></div>
+    <div class="stat"><b>312</b><span>test pairs (39 × 8)</span></div>
+  </div>
+  <p class="cap">The writer counts (181 / 39 / 39) are derived from the 70/15/15 slicing of 259 writers; they reproduce the printed pair totals exactly.</p>
+  <div class="quiz" data-quiz="q5"></div>
+</section>
+
+<!-- 4 -->
+<section class="sec" id="emb" aria-labelledby="h-e" data-nav="Embeddings">
+  <div class="sec-head"><span class="num">04</span><h2 class="t" id="h-e">ResNet50 embeddings and distance</h2></div>
+  <p>A pretrained ResNet50 is the feature extractor: its final classification layer is removed and the pooled feature vector (<b>2048 dimensions</b>) is the embedding. The backbone is frozen so the notebook stays practical. Signatures are grayscale, but the ImageNet-pretrained network expects three channels, so each image is converted and normalized.</p>
+  <div class="viz" id="pr-viz">
+    <p class="vt">Visualizer · Preprocessing a signature</p>
+    <div class="pipe" id="pr-pipe"></div>
+    <div class="readout" id="pr-read" aria-live="polite"></div>
+  </div>
+  <div class="math">D(z₁, z₂) = √( Σⱼ (z₁ⱼ − z₂ⱼ)² )</div>
+  <p>Smaller distance means more similar in the learned space. Distance is <b>not</b> a calibrated probability: a decision threshold must be chosen on validation data.</p>
+  <div class="viz" id="eu-viz">
+    <p class="vt">Visualizer · Euclidean distance on a 3-D toy embedding</p>
+    <div class="controls"><label for="eu-a">z₁</label><input type="text" id="eu-a" value="1, 2, 3" style="width:7em"><label for="eu-b">z₂</label><input type="text" id="eu-b" value="1, 2, 3" style="width:7em"><button type="button" class="chip" data-a="1, 2, 3" data-b="1, 2, 3">identical</button><button type="button" class="chip" data-a="1, 2, 3" data-b="2, 0, 3">different</button></div>
+    <div class="readout" id="eu-read" aria-live="polite"></div>
+  </div>
+  <h3>The recorded distances from raw ResNet50 features</h3>
+  <p>One batch of 16 pairs gave an embedding batch of shape <code>[16, 2048]</code>. The first eight distances and labels were printed:</p>
+  <div class="viz" id="rd-viz">
+    <p class="vt">Visualizer · Eight recorded pairs and a trial threshold</p>
+    <div class="controls"><label for="rd-t">Accept as same if distance ≤</label><input type="range" id="rd-t" min="400" max="1000" value="650" style="max-width:220px"><b class="mono" id="rd-tv"></b></div>
+    <div class="bars" id="rd-bars"></div>
+    <div class="readout" id="rd-read" aria-live="polite"></div>
+  </div>
+  <div class="callout"><b class="lab">What this shows</b><p>With only these eight pairs, same-writer distances (4.36–9.79) overlap different-pair distances (5.56, 7.39), so no threshold is perfect. It is a tiny sample and not an evaluation, but it motivates training a better embedding.</p></div>
+  <details class="chk"><summary>Check yourself: what does an embedding represent, and why is distance not a probability?</summary><p>An embedding is a vector in a learned feature space where similar samples should be close. Distance has no built-in calibration to a probability of “same writer”: a threshold chosen on validation data converts it into a decision.</p></details>
+  <div class="quiz" data-quiz="q6"></div>
+</section>
+
+<!-- 5 -->
+<section class="sec" id="con" aria-labelledby="h-c" data-nav="Contrastive loss">
+  <div class="sec-head"><span class="num">05</span><h2 class="t" id="h-c">Contrastive loss and training</h2></div>
+  <p>Positive pairs (y = 1) should be close; negative pairs (y = 0) should be at least a <b>margin</b> m apart:</p>
+  <div class="math">L = y·D² + (1 − y)·max(0, m − D)²</div>
+  <p>For a positive pair the loss shrinks distance. For a negative pair, loss remains only while its distance is below the margin; beyond the margin its contribution is <b>zero</b>. Some references reverse the label convention, so always state it: here <b>1 = same-writer genuine pair, 0 = genuine–forged pair</b>.</p>
+  <div class="viz" id="cl-viz">
+    <p class="vt">Visualizer · The two branches of contrastive loss</p>
+    <div class="controls"><label for="cl-m">Margin m</label><input type="range" id="cl-m" min="2" max="20" value="10" style="max-width:150px"><b class="mono" id="cl-mv"></b><label for="cl-d">Distance D</label><input type="range" id="cl-d" min="0" max="20" value="6" style="max-width:150px"><b class="mono" id="cl-dv"></b></div>
+    <div id="cl-chart"></div>
+    <div class="readout" id="cl-read" aria-live="polite"></div>
+  </div>
+  <h3>The hand-worked example</h3>
+  <div class="tw"><table><thead><tr><th>Pair</th><th>D</th><th>y</th><th>Loss (m = 1)</th></tr></thead><tbody>
+    <tr><td>1</td><td>0.2</td><td>1</td><td>0.2² = 0.04</td></tr>
+    <tr><td>2</td><td>0.8</td><td>1</td><td>0.8² = 0.64</td></tr>
+    <tr><td>3</td><td>1.4</td><td>0</td><td>max(0, 1 − 1.4)² = 0</td></tr>
+    <tr><td>4</td><td>0.3</td><td>0</td><td>(1 − 0.3)² = 0.49</td></tr></tbody></table></div>
+  <p>Mean = (0.04 + 0.64 + 0 + 0.49) / 4 = <b>0.2925</b>, matching the notebook's 0.29250001907348633.</p>
+  <h3>Training a small projection head</h3>
+  <p>The frozen ResNet50 supplies 2048-d features; a trainable <b>projection head</b> (2048 → 512 → ReLU → Dropout 0.2 → 128, then L2 normalization) maps them to a compact embedding. Adam, learning rate 1e-3, batch size 16, margin 1.0, 3 epochs. Because the embeddings are L2-normalized, distances lie between 0 and 2.</p>
+  <div class="viz" id="ct-viz">
+    <p class="vt">Visualizer · Recorded contrastive training loss</p>
+    <div id="ct-chart"></div>
+  </div>
+  <p class="cap">Head size derived from the layer definitions: 2048·512 + 512 + 512·128 + 128 = 1,114,752 trainable parameters.</p>
+  <div class="quiz" data-quiz="q7"></div>
+</section>
+
+<!-- 6 -->
+<section class="sec" id="tri" aria-labelledby="h-tr" data-nav="Triplet loss">
+  <div class="sec-head"><span class="num">06</span><h2 class="t" id="h-tr">Triplet loss and hard-negative mining</h2></div>
+  <p>A triplet has an <b>anchor</b> (reference), a <b>positive</b> (another genuine signature from the same writer) and a <b>negative</b> (a forged or different-writer sample). The goal is to make the anchor–positive distance smaller than the anchor–negative distance by at least a margin:</p>
+  <div class="math">L = max(0, D(A,P) − D(A,N) + m)</div>
+  <ul>
+    <li><b>Easy negative:</b> already far from the anchor; loss is often zero.</li>
+    <li><b>Hard negative:</b> closer to the anchor than the positive; informative but may be mislabeled or noisy.</li>
+    <li><b>Semi-hard negative:</b> farther than the positive but still within the margin; useful for learning a ranking boundary.</li>
+  </ul>
+  <div class="viz" id="tg-viz">
+    <p class="vt">Visualizer · Triplet geometry</p>
+    <p class="vd">The anchor is at the origin and the positive at (0.5, 0.1). Pick the lecture's negatives or place your own. Dashed circle: D(A,P). Dotted circle: D(A,P) + margin.</p>
+    <div class="controls"><div class="seg" id="tg-seg" role="group" aria-label="Negative"></div><label for="tg-m">Margin m</label><input type="range" id="tg-m" min="0" max="100" value="20" style="max-width:130px"><b class="mono" id="tg-mv"></b></div>
+    <div class="controls"><label for="tg-x">Negative x</label><input type="range" id="tg-x" min="-30" max="270" value="200" style="max-width:150px"><label for="tg-y">Negative y</label><input type="range" id="tg-y" min="-30" max="200" value="150" style="max-width:150px"></div>
+    <svg id="tg-svg" class="sv" style="max-width:420px" viewBox="-12 -4 124 100" role="img" aria-label="Anchor, positive and negative points in a two-dimensional embedding space"></svg>
+    <div class="readout" id="tg-read" aria-live="polite"></div>
+  </div>
+  <div class="tw"><table><thead><tr><th></th><th>Contrastive loss</th><th>Triplet loss</th></tr></thead><tbody>
+    <tr><td>Optimizes</td><td>Pairs: absolute closeness / margin separation</td><td>Relative distances in a triplet</td></tr>
+    <tr><td>Needs</td><td>Pair + label</td><td>Anchor, positive, negative</td></tr>
+    <tr><td>Sampling matters?</td><td>Pair mix</td><td>Strongly: random negatives are often too easy and give zero loss</td></tr></tbody></table></div>
+  <p>The notebook builds triplets per writer after the writer split: anchor and positive are two genuine signatures, the negative is a forged signature (6 triplets per writer in the simplified sampler). It trains a separate projection head with margin 0.2 for 3 epochs on the same frozen features. Its per-epoch losses were not printed, and this is not a controlled comparison unless training budget and tuning are matched. Advanced systems use batch-hard or semi-hard online mining.</p>
+  <div class="quiz" data-quiz="q8"></div>
+</section>
+
+<!-- 7 -->
+<section class="sec" id="ev" aria-labelledby="h-ev" data-nav="Evaluation">
+  <div class="sec-head"><span class="num">07</span><h2 class="t" id="h-ev">Threshold selection, FAR and FRR</h2></div>
+  <p>Verification turns distance into a decision: distance ≤ threshold → predict <b>same/genuine</b>; otherwise <b>different/forged</b>. Select the threshold on <b>validation</b> pairs only, then report the final result on the held-out <b>test</b> pairs. The notebook scans 101 quantiles of the validation distances and keeps the threshold with the highest accuracy.</p>
+  <ul><li><b>FAR</b> (false acceptance rate): fraction of different/forged pairs wrongly accepted as same.</li><li><b>FRR</b> (false rejection rate): fraction of same/genuine pairs wrongly rejected.</li></ul>
+  <div class="callout warm"><b class="lab">Illustrative data</b><p>The notebook did not print validation or test results for the trained heads. The explorer below uses <b>synthetic</b> distance samples (156 same + 156 different pairs per split, matching the 312-pair size) purely to show the procedure and trade-off. Its numbers say nothing about real performance.</p></div>
+  <div class="viz" id="th-viz">
+    <p class="vt">Visualizer · Choose on validation, report on test</p>
+    <div class="controls"><div class="seg" id="th-seg" role="group" aria-label="Mode"></div><label for="th-t">Threshold</label><input type="range" id="th-t" min="0" max="200" value="80" style="max-width:220px"><b class="mono" id="th-tv"></b><button type="button" class="chip" id="th-pick">Pick best on validation</button></div>
+    <div id="th-chart"></div>
+    <div class="two"><div class="cm" id="th-cm" role="group" aria-label="Confusion matrix"></div><div class="bars" id="th-bars"></div></div>
+    <div class="readout" id="th-read" aria-live="polite"></div>
+  </div>
+  <p>Accuracy alone can hide an unacceptable error trade-off: lowering FAR (fewer forgeries accepted) usually raises FRR (more genuine signatures rejected). The right operating point depends on the application's risk tolerance and must be validated on representative data.</p>
+  <h3>Embedding visualization</h3>
+  <p>For a sample of test pairs the notebook projects embeddings to two dimensions with <b>PCA</b>. This is exploratory: PCA keeps directions of high variance, not necessarily the decision boundary, and it is not proof that the representation generalizes.</p>
+  <div class="quiz" data-quiz="q9"></div>
+  <div class="quiz" data-quiz="q10"></div>
+</section>
+
+<!-- 8 -->
+<section class="sec" id="recap" aria-labelledby="h-rc" data-nav="Recap">
+  <div class="sec-head"><span class="num">08</span><h2 class="t" id="h-rc">Recap and limitations</h2></div>
+  <div class="callout"><b class="lab">Key takeaway</b><p>A Siamese network learns a comparison space. Shared weights make embeddings comparable; contrastive and triplet losses shape distances; a validation-selected threshold converts distance into a verification decision.</p></div>
+  <p>Answer each prompt in your own words, then flip the card.</p>
+  <div class="fcs" id="fcs"></div>
+  <h3>Limitations and going further</h3>
+  <ul><li>Compare contrastive and triplet objectives under a matched training budget.</li><li>Explore batch-hard and semi-hard triplet mining.</li><li>Study ROC curves, Equal Error Rate (EER), FAR and FRR.</li><li>Validate on writers and forgery styles not seen in training.</li><li>Review data licensing, consent, demographic performance and security before any real deployment.</li></ul>
+  <div class="callout warm"><b class="lab">Technical caution</b><p>Public mirrors and file naming for BHSig260 vary: validate the parser against the official documentation before trusting labels or metrics. This is a classroom learning exercise, not a deployable banking verification system.</p></div>
+</section>
+
+</main>
+
+<footer>Computer Vision 11 post read</footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const fmt=n=>Number(n).toLocaleString('en-US');
+function h(tag,attrs,...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(k==='class')e.className=v;else if(k==='style')e.style.cssText=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(k,v);}
+  kids.flat().forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(c));});return e;}
+function seg(host,items,cur,cb){host.innerHTML='';items.forEach(([v,l])=>{const b=h('button',{type:'button','aria-pressed':String(v===cur)},l);b.addEventListener('click',()=>{$$('button',host).forEach((x,i)=>x.setAttribute('aria-pressed',String(items[i][0]===v)));cb(v);});host.append(b);});}
+function mkGrid(host,rows,cols,fn){host.innerHTML='';host.style.setProperty('--cols',cols);const cells=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const d=h('div',{class:'c'});fn&&fn(d,r,c);host.append(d);cells.push(d);}return cells;}
+
+/* nav */
+(function(){const toc=$('#toc');$$('section.sec').forEach(s=>toc.append(h('a',{href:'#'+s.id},s.dataset.nav)));const links=$$('a',toc);
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+e.target.id));const on=$('a.on',toc);if(on)on.scrollIntoView({block:'nearest',inline:'center'});}}),{rootMargin:'-30% 0px -60% 0px'});
+ $$('section.sec').forEach(s=>io.observe(s));const prog=$('#prog');const upd=()=>{const d=document.documentElement;prog.style.width=(100*d.scrollTop/(d.scrollHeight-d.clientHeight||1))+'%';};addEventListener('scroll',upd,{passive:true});upd();})();
+
+/* ---------- line chart ---------- */
+function lineChart(host,o){
+  host.innerHTML='';
+  const W=640,H=300,m={l:56,r:16,t:14,b:44},n=o.xs.length,dec=o.dec??3;
+  const all=o.series.flatMap(s=>s.vals);let lo=o.ymin??Math.min(...all),hi=o.ymax??Math.max(...all);if(o.ymin==null||o.ymax==null){const p=(hi-lo)*.08||.1;if(o.ymin==null)lo-=p;if(o.ymax==null)hi+=p;}
+  const x=i=>m.l+(n===1?0:i*(W-m.l-m.r)/(n-1)),y=v=>m.t+(hi-v)*(H-m.t-m.b)/(hi-lo||1);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${o.aria||'Line chart'}. Use left and right arrow keys to read values.">`;
+  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,yy=y(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${yy}" y2="${yy}" stroke="#D5C7A3" stroke-width="1"/><text x="${m.l-8}" y="${yy+4}" font-size="11" text-anchor="end">${(+v.toFixed(2)).toString()}</text>`;}
+  const step=Math.ceil(n/12);o.xs.forEach((l,i)=>{if(i%step===0||i===n-1)s+=`<text x="${x(i)}" y="${H-m.b+16}" font-size="11" text-anchor="middle">${l}</text>`;});
+  s+=`<text x="${(W+m.l)/2}" y="${H-6}" font-size="12" text-anchor="middle">${o.xTitle||'Epoch'}</text><text x="14" y="${H/2}" font-size="12" text-anchor="middle" transform="rotate(-90 14 ${H/2})">${o.yTitle||''}</text>`;
+  if(o.zero!==false&&lo<0&&hi>0)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#18261F" stroke-width="1.5"/>`;
+  o.series.forEach(se=>{const pts=se.vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    s+=`<polyline points="${pts}" fill="none" stroke="${se.color}" stroke-width="${se.w||2.5}" ${se.dash?`stroke-dasharray="${se.dash}"`:''} stroke-linejoin="round"/>`;
+    if(n<=30)se.vals.forEach((v,i)=>{s+=se.shape==='sq'?`<rect x="${x(i)-3.5}" y="${y(v)-3.5}" width="7" height="7" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M${x(i)},${y(v)-4.5}l4.5,8h-9z" fill="${se.color}"/>`:`<circle cx="${x(i)}" cy="${y(v)}" r="3.3" fill="${se.color}"/>`;});});
+  (o.marks||[]).forEach(mk=>{s+=`<line x1="${x(mk.i)}" x2="${x(mk.i)}" y1="${m.t}" y2="${H-m.b}" stroke="${mk.color||'#18261F'}" stroke-width="2" stroke-dasharray="3 3"/><text x="${x(mk.i)+4}" y="${m.t+12}" font-size="11" font-weight="700" style="fill:#18261F">${mk.label}</text>`;});
+  s+=`<g id="hv" style="display:none"><line id="hl" y1="${m.t}" y2="${H-m.b}" stroke="#18261F" stroke-width="1.5"/></g></svg>`;
+  const leg=h('div',{class:'legend'});o.series.forEach(se=>leg.append(h('span',{},(()=>{const e=document.createElementNS('http://www.w3.org/2000/svg','svg');e.setAttribute('viewBox','0 0 34 12');e.innerHTML=`<line x1="2" x2="32" y1="6" y2="6" stroke="${se.color}" stroke-width="3" ${se.dash?`stroke-dasharray="${se.dash}"`:''}/>`+(se.shape==='sq'?`<rect x="13" y="2" width="8" height="8" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M17,1l5,10h-10z" fill="${se.color}"/>`:`<circle cx="17" cy="6" r="4" fill="${se.color}"/>`);return e;})(),se.name)));
+  const box=h('div');box.innerHTML=s;const svg=box.firstChild;const rd=h('div',{class:'readout','aria-live':'polite'},o.hint||'Hover the chart, or focus it and use ← → keys, to read exact values.');
+  host.append(leg,box,rd);
+  const hv=$('#hv',svg),hl=$('#hl',svg);let idx=0;
+  function show(i){idx=Math.max(0,Math.min(n-1,i));hv.style.display='';hl.setAttribute('x1',x(idx));hl.setAttribute('x2',x(idx));
+    rd.innerHTML=`<b>${o.xName||'Epoch'} ${o.xs[idx]}</b> — `+o.series.map(se=>`${se.name}: <b>${se.vals[idx].toFixed(dec)}</b>`).join(' · ');}
+  svg.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));});
+  svg.addEventListener('touchmove',e=>{const t=e.touches[0],r=svg.getBoundingClientRect(),px=(t.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));},{passive:true});
+  svg.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();show(idx+1);}if(e.key==='ArrowLeft'){e.preventDefault();show(idx-1);}});
+}
+const C={tr:'#1D5A41',va:'#9A5F33'};
+
+function barRows(host,rows){rows.forEach(([l,pct,txt,alt])=>host.append(h('div',{class:'br'},h('span',{},l),h('div',{style:'display:flex;align-items:center'},h('div',{class:'tr',style:'flex:1'},h('div',{class:'fl'+(alt?' alt':''),style:`width:${Math.max(pct,.4)}%`})),h('span',{class:'vl'},txt)))));}
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* 1 */
+(function(){
+  const T={cls:['Classification','Assign an input to one of a fixed set of labels. Needs examples of every label it must output.'],idn:['Identification','Which enrolled identity best matches this sample? A one-to-many search over all enrolled identities.'],ver:['Verification','Is this sample from the claimed identity? A one-to-one comparison of two samples: the bank cheque case.']};
+  let k='ver';
+  function u(){let s='';const box=(x,y,t,f='#FBF7EB')=>`<rect x="${x}" y="${y}" width="50" height="24" rx="4" fill="${f}" stroke="#12392A" stroke-width="1.2"/><text x="${x+25}" y="${y+15}" text-anchor="middle">${t}</text>`;
+    if(k==='cls')s=box(8,33,'signature')+'<path d="M60 45h28" stroke="#12392A"/>'+box(90,33,'classifier','#9FC7AF')+'<path d="M142 45h28" stroke="#12392A"/>'+box(172,12,'label 1')+box(172,42,'label 2')+box(172,68,'… label N');
+    if(k==='idn')s=box(8,33,'query')+'<path d="M60 45h28" stroke="#12392A"/>'+box(90,33,'compare all','#9FC7AF')+[8,36,64].map(y=>`<path d="M142 45L172 ${y+12}" stroke="#12392A"/>`).join('')+box(172,4,'enrolled 1')+box(172,34,'enrolled 2')+box(172,62,'enrolled N')+'<text x="198" y="90" text-anchor="middle">best match?</text>';
+    if(k==='ver')s=box(8,12,'cheque')+box(8,52,'reference')+'<path d="M60 24L88 40M60 64L88 50" stroke="#12392A"/>'+box(90,33,'compare','#9FC7AF')+'<path d="M142 45h28" stroke="#12392A"/>'+box(172,33,'same? yes/no','#E7DCC0');
+    $('#ty-svg').innerHTML=s;$('#ty-read').innerHTML=`<b>${T[k][0]}.</b> ${T[k][1]}`;}
+  seg($('#ty-seg'),Object.entries(T).map(([a,b])=>[a,b[0]]),'ver',v=>{k=v;u();});u();
+})();
+
+/* 2 */
+(function(){
+  let m='sh';const g=id=>+$('#'+id).value;
+  function u(){const x=g('sh-x'),w1=g('sh-w1')/10,w2=m==='sh'?w1:g('sh-w2')/10;const a=w1*x,b=w2*x,d=Math.abs(a-b);
+    $('#sh-w2').disabled=m==='sh';$('#sh-bars').innerHTML='';barRows($('#sh-bars'),[['Branch A: w₁·x',a/30*100,a.toFixed(2)],['Branch B: '+(m==='sh'?'w₁':'w₂')+'·x',b/30*100,b.toFixed(2),true]]);
+    $('#sh-read').innerHTML=m==='sh'?`Shared weights: the same input gives identical embeddings, distance = <b>${d.toFixed(2)}</b>. Any distance now reflects real differences between inputs.`:`Separate weights: the <i>same</i> input gives different embeddings (w₁ = ${w1.toFixed(1)}, w₂ = ${w2.toFixed(1)}), distance = <b>${d.toFixed(2)}</b>. The two branches use different transformations, so distance is not a meaningful similarity.`;}
+  seg($('#sh-seg'),[['sh','Shared weights'],['sep','Separate weights']],'sh',v=>{m=v;u();});['sh-x','sh-w1','sh-w2'].forEach(i=>$('#'+i).addEventListener('input',u));u();
+  const O={cls:['Fixed identity classifier','Output classes are tied to the identities seen in training. A new writer needs a new output and retraining of the classifier.'],sia:['Siamese verifier','Learns a comparison rule. A new writer needs just a reference signature to compare against (one-shot): no new output neuron.']};
+  const f=k=>$('#os-read').innerHTML=`<b>${O[k][0]}.</b> ${O[k][1]}`;seg($('#os-seg'),Object.entries(O).map(([a,b])=>[a,b[0]]),'cls',f);f('cls');
+})();
+
+/* 3 */
+(function(){
+  function ps(){const raw=$('#ps-in').value.trim(),stem=raw.replace(/\.[^.]*$/,'').toLowerCase();const lm=stem.match(/(^|[-_])(h|b)[-_]s[-_]?(\d+)/);let out;
+    if(!lm)out='<b style="color:var(--clay)">Unparsed.</b> No language/writer pattern. The notebook would stop and ask you to inspect the naming, not guess.';
+    else{const lab=stem.match(/[-_]([gf])[-_]?\d*$/);out=lab?`Writer <b>${lm[2]}-${lm[3]}</b>, label <b>${lab[1]==='g'?'1 (genuine)':'0 (forged)'}</b>.`:'<b style="color:var(--clay)">Unparsed.</b> Writer found but no G/F marker.';}
+    $('#ps-read').innerHTML=out;}
+  $('#ps-in').addEventListener('input',ps);$$('#ps-viz [data-v]').forEach(b=>b.addEventListener('click',()=>{$('#ps-in').value=b.dataset.v;ps();}));ps();
+  function pc(){const G=+$('#pc-g').value||0,F=+$('#pc-f').value||0,M=Math.max(2,+$('#pc-m').value||2),pos=G*(G-1)/2,neg=G*F,kp=Math.min(pos,M/2),kn=Math.min(neg,M/2);
+    $('#pc-read').innerHTML=`Positive candidates C(${G},2) = <b>${fmt(pos)}</b>; negative candidates ${G} × ${F} = <b>${fmt(neg)}</b>. Kept: ${kp} positive + ${kn} negative = <b>${kp+kn}</b> pairs (a random subset, balanced by construction).`;}
+  ['pc-g','pc-f','pc-m'].forEach(i=>$('#'+i).addEventListener('input',pc));pc();
+  let m='pair';
+  function lk(){const r=rng(42),NW=30,P=[];for(let w=0;w<NW;w++)for(let i=0;i<8;i++)P.push(w);
+    let tr=new Set(),te=new Set();
+    if(m==='pair'){const a=P.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}const cut=Math.floor(.7*a.length);a.slice(0,cut).forEach(w=>tr.add(w));a.slice(cut).forEach(w=>te.add(w));}
+    else{for(let w=0;w<NW;w++)(w<21?tr:te).add(w);}
+    const g=$('#lk-grid');g.innerHTML='';let bad=0;for(let w=0;w<NW;w++){const b=tr.has(w)&&te.has(w);if(b)bad++;g.append(h('div',{class:b?'bad':'',title:`Writer ${w+1}`},b?'✗':'✓'));}
+    $('#lk-read').innerHTML=m==='pair'?`Random pair split: <b>${bad} of ${NW}</b> writers have pairs in both train and test, so the model has already seen those writers at test time.`:`Writer-level split: <b>${bad} of ${NW}</b> writers appear in both. Test writers are genuinely unseen.`;}
+  seg($('#lk-seg'),[['pair','Split pairs randomly'],['writer','Split writers first']],'pair',v=>{m=v;lk();});lk();
+})();
+
+/* 4 */
+(function(){
+  const S=[['Open as grayscale','Each signature is loaded as a single-channel image.'],['Resize 224 × 224','Fixed input size for ResNet50.'],['Grayscale → 3 channels','The ImageNet-pretrained network expects RGB, so the gray channel is replicated to three.'],['Normalize','ImageNet mean (0.485, 0.456, 0.406) and std (0.229, 0.224, 0.225).'],['Frozen ResNet50 → 2048-d','Final classification layer removed; the pooled 2048-dimensional vector is the embedding. Backbone weights are frozen.']];
+  let cur=2;const p=$('#pr-pipe');S.forEach((s,i)=>{if(i)p.append(h('span',{class:'sep'},'→'));const b=h('button',{type:'button',class:'node','aria-pressed':'false'},s[0]);b.addEventListener('click',()=>{cur=i;r();});p.append(b);});
+  function r(){$$('.node',p).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));$('#pr-read').innerHTML=S[cur][1];}r();
+  const parse=s=>s.split(',').map(x=>parseFloat(x)).filter(x=>!isNaN(x));
+  function eu(){const a=parse($('#eu-a').value),b=parse($('#eu-b').value);if(a.length!==b.length||!a.length){$('#eu-read').textContent='Enter two vectors of the same length.';return;}
+    const t=a.map((x,i)=>`(${x}−${b[i]})²`).join(' + '),d=Math.sqrt(a.reduce((s,x,i)=>s+(x-b[i])**2,0));$('#eu-read').innerHTML=`D = √(${t}) = <b>${d.toFixed(3)}</b>`+(d===0?'. Identical vectors have distance 0.':'.');}
+  ['eu-a','eu-b'].forEach(i=>$('#'+i).addEventListener('input',eu));$$('#eu-viz [data-a]').forEach(b=>b.addEventListener('click',()=>{$('#eu-a').value=b.dataset.a;$('#eu-b').value=b.dataset.b;eu();}));eu();
+  const D=[6.85,7.39,4.99,9.79,4.36,4.81,6.55,5.56],Y=[1,0,1,1,1,1,1,0];
+  function rd(){const t=$('#rd-t').value/100;$('#rd-tv').textContent=t.toFixed(2);$('#rd-bars').innerHTML='';let ok=0;
+    D.forEach((d,i)=>{const acc=d<=t,right=acc===(Y[i]===1);if(right)ok++;});
+    barRows($('#rd-bars'),D.map((d,i)=>{const acc=d<=t,right=acc===(Y[i]===1);return [`Pair ${i+1} · ${Y[i]?'same':'different'}`,d/10*100,`${d.toFixed(2)} ${acc?'accept':'reject'} ${right?'✓':'✗'}`,Y[i]===0];}));
+    $('#rd-read').innerHTML=`Threshold ${t.toFixed(2)}: <b>${ok} of 8</b> decisions correct. Green bars: same-writer pairs; clay bars: genuine–forged pairs.`;}
+  $('#rd-t').addEventListener('input',rd);rd();
+})();
+
+/* 5 */
+(function(){
+  function cl(){const m=$('#cl-m').value/10,d=$('#cl-d').value/10;$('#cl-mv').textContent=m.toFixed(1);$('#cl-dv').textContent=d.toFixed(1);
+    const xs=[];for(let i=0;i<=20;i++)xs.push((i/10).toFixed(1));
+    lineChart($('#cl-chart'),{xs,xTitle:'Distance D',yTitle:'Loss',dec:3,ymin:0,aria:'Contrastive loss for positive and negative pairs versus distance',series:[{name:'y = 1 (positive): D²',vals:xs.map(x=>x*x),color:C.tr},{name:'y = 0 (negative): max(0, m−D)²',vals:xs.map(x=>Math.max(0,m-x)**2),color:C.va,dash:'6 4',shape:'sq'}]});
+    $('#cl-read').innerHTML=`At D = ${d.toFixed(1)}, m = ${m.toFixed(1)}: positive pair loss = <b>${(d*d).toFixed(3)}</b>; negative pair loss = <b>${(Math.max(0,m-d)**2).toFixed(3)}</b>${d>=m?' (already beyond the margin, so zero)':''}.`;}
+  ['cl-m','cl-d'].forEach(i=>$('#'+i).addEventListener('input',cl));cl();
+  lineChart($('#ct-chart'),{xs:['1','2','3'],xTitle:'Epoch',yTitle:'Contrastive loss',dec:4,ymin:0,aria:'Contrastive loss falling over three epochs',series:[{name:'Training loss',vals:[.1910,.1426,.1160],color:C.tr}]});
+})();
+
+/* 6 */
+(function(){
+  const N={easy:['Easy negative',2.0,1.5],hard:['Hard negative',.2,.1],cus:['Custom','','']};let k='easy';
+  const sx=v=>v*40,sy=v=>(2-v)*40;
+  function u(){const m=$('#tg-m').value/100;$('#tg-mv').textContent=m.toFixed(2);let nx=$('#tg-x').value/100,ny=$('#tg-y').value/100;if(k!=='cus'){nx=N[k][1];ny=N[k][2];$('#tg-x').value=nx*100;$('#tg-y').value=ny*100;}
+    const P=[.5,.1],dap=Math.hypot(P[0],P[1]),dan=Math.hypot(nx,ny),L=Math.max(0,dap-dan+m);const cat=dan<dap?'hard':dan<dap+m?'semi-hard':'easy';
+    let s='<rect x="-12" y="-4" width="124" height="100" fill="#E7DCC0"/>';
+    s+=`<circle cx="0" cy="${sy(0)}" r="${dap*40}" fill="none" stroke="#1D5A41" stroke-width=".7" stroke-dasharray="3 2"/><circle cx="0" cy="${sy(0)}" r="${(dap+m)*40}" fill="none" stroke="#9A5F33" stroke-width=".7" stroke-dasharray="1 2"/>`;
+    s+=`<circle cx="0" cy="${sy(0)}" r="2.5" fill="#12392A"/><text x="-10" y="${sy(0)-5}" style="font-size:4.5px">Anchor</text><circle cx="${sx(P[0])}" cy="${sy(P[1])}" r="2.5" fill="#3A8660"/><text x="${sx(P[0])+3}" y="${sy(P[1])-3}" style="font-size:4.5px">Positive</text><rect x="${sx(nx)-2.5}" y="${sy(ny)-2.5}" width="5" height="5" fill="#9A5F33"/><text x="${sx(nx)-6}" y="${sy(ny)+9}" style="font-size:4.5px">Negative</text>`;
+    $('#tg-svg').innerHTML=s;
+    $('#tg-read').innerHTML=`D(A,P) = ${dap.toFixed(3)}; D(A,N) = ${dan.toFixed(3)}; margin ${m.toFixed(2)} → loss = max(0, ${dap.toFixed(3)} − ${dan.toFixed(3)} + ${m.toFixed(2)}) = <b>${L.toFixed(3)}</b>. This negative is <b>${cat}</b>${cat==='easy'?' (far outside the margin ring: zero loss)':cat==='hard'?' (closer than the positive: the most informative, but check for label noise)':' (farther than the positive, within the margin: still contributes loss)'}.`;}
+  seg($('#tg-seg'),Object.entries(N).map(([a,b])=>[a,b[0]]),'easy',v=>{k=v;u();});$('#tg-m').addEventListener('input',u);['tg-x','tg-y'].forEach(i=>$('#'+i).addEventListener('input',()=>{k='cus';$$('#tg-seg button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===2)));u();}));u();
+})();
+
+/* 7 */
+(function(){
+  function gen(seed){const r=rng(seed),nm=()=>{let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};const cl=x=>Math.min(2,Math.max(0,x));const out=[];for(let i=0;i<156;i++)out.push([cl(.65+.22*nm()),1]);for(let i=0;i<156;i++)out.push([cl(1.0+.25*nm()),0]);return out;}
+  const VAL=gen(11),TEST=gen(29);
+  function metr(S,t){let tp=0,fp=0,tn=0,fn=0;S.forEach(([d,y])=>{const p=d<=t?1:0;if(p&&y)tp++;else if(p)fp++;else if(y)fn++;else tn++;});return{tp,fp,tn,fn,acc:(tp+tn)/S.length,far:fp/(fp+tn),frr:fn/(fn+tp)};}
+  function best(S){const ds=S.map(x=>x[0]).sort((a,b)=>a-b);const c=[...new Set(Array.from({length:101},(_,i)=>{const p=i/100*(ds.length-1),lo=Math.floor(p),hi=Math.ceil(p);return ds[lo]+(ds[hi]-ds[lo])*(p-lo);}))];let b=null;c.forEach(t=>{const a=metr(S,t).acc;if(!b||a>b[0])b=[a,t];});return b;}
+  let m='test',valT=best(VAL)[1];
+  function u(){const t=$('#th-t').value/100;$('#th-tv').textContent=t.toFixed(2);const S=m==='test'?TEST:VAL,M=metr(S,t);
+    const xs=[],far=[],frr=[];for(let i=0;i<=20;i++){const x=i/10;xs.push(x.toFixed(1));const q=metr(S,x);far.push(q.far);frr.push(q.frr);}
+    lineChart($('#th-chart'),{xs,xTitle:'Threshold',yTitle:'Rate',dec:3,ymin:0,ymax:1,aria:`FAR and FRR versus threshold on the ${m} set`,marks:[{i:Math.round(t*10),label:'t'}],series:[{name:'FAR',vals:far,color:C.va,dash:'6 4',shape:'sq'},{name:'FRR',vals:frr,color:C.tr}]});
+    $('#th-cm').innerHTML=`<div></div><div>Pred: Different</div><div>Pred: Same</div><div>Actual: Different</div><div class="g">${M.tn}<br><small>TN</small></div><div class="b">${M.fp}<br><small>FP</small></div><div>Actual: Same</div><div class="b">${M.fn}<br><small>FN</small></div><div class="g">${M.tp}<br><small>TP</small></div>`;
+    $('#th-bars').innerHTML='';barRows($('#th-bars'),[['Accuracy',M.acc*100,M.acc.toFixed(3)],['FAR',M.far*100,M.far.toFixed(3),true],['FRR',M.frr*100,M.frr.toFixed(3),true]]);
+    const tb=metr(TEST,valT);
+    $('#th-read').innerHTML=`<b>${m==='test'?'Held-out test (synthetic)':'Validation (synthetic)'}</b> at threshold ${t.toFixed(2)}: accuracy ${M.acc.toFixed(3)}, FAR ${M.far.toFixed(3)}, FRR ${M.frr.toFixed(3)}. Validation-selected threshold: <b>${valT.toFixed(3)}</b> (val accuracy ${best(VAL)[0].toFixed(3)}) → test accuracy ${tb.acc.toFixed(3)}, FAR ${tb.far.toFixed(3)}, FRR ${tb.frr.toFixed(3)}. Never tune the threshold on the test set.`;}
+  seg($('#th-seg'),[['val','Validation set'],['test','Test set']],'test',v=>{m=v;u();});$('#th-t').addEventListener('input',u);$('#th-pick').addEventListener('click',()=>{$('#th-t').value=Math.round(valT*100);u();});u();
+})();
+
+/* quizzes */
+const QZ={
+ q1:{q:'A bank compares a cheque signature with the reference signature for the claimed account. Which task is this?',o:['Multi-class identification','Object detection','One-to-one verification','Semantic segmentation'],a:2,e:'The system checks whether two samples belong to the same claimed writer: one-to-one verification.'},
+ q2:{q:'Why can a fixed identity classifier be inconvenient when new writers are added frequently?',o:['Its output classes are tied to identities seen during training','It cannot process grayscale input images','It requires bounding boxes around signatures','It always uses a non-convolutional encoder'],a:0,e:'A fixed output layer represents a predefined set of identities, so new identities may require changing and retraining it.'},
+ q3:{q:'Why do the two branches of a Siamese network share encoder weights?',o:['To make both input images pixel-identical','To apply the same feature transformation to both inputs','To remove the need for pair labels','To force the two embeddings to have zero distance'],a:1,e:'Shared weights map both inputs into the same learned feature space using the same transformation.'},
+ q4:{q:'If two embedding vectors are identical, what is their Euclidean distance?',o:['1','The embedding dimension','Undefined','0'],a:3,e:'The difference vector is all zeros, so its Euclidean norm is zero.'},
+ q5:{q:'Which data-splitting strategy best reduces writer-identity leakage?',o:['Randomly split all generated pairs','Split writers first, then form pairs within each split','Reuse the same writers across every split','Place all forged samples in the test set'],a:1,e:'Splitting by writer before pair construction keeps identities separate across train, validation and test.'},
+ q6:{q:'In this notebook\'s pair-label convention, what does label 1 represent?',o:['A forged pair from different writers','A pair with an unknown writer identity','A pair containing a background image','A genuine pair from the same writer'],a:3,e:'The notebook defines label 1 as a same-writer genuine pair; 0 is a genuine–forged pair.'},
+ q7:{q:'For a negative pair whose distance is greater than the contrastive-loss margin, what is its margin-based contribution?',o:['The full positive-pair loss','Zero loss','A new writer-class penalty','The maximum possible embedding distance'],a:1,e:'Beyond the margin the hinge term is zero, so the pair contributes no loss.'},
+ q8:{q:'Which three samples are compared by triplet loss?',o:['An anchor, a positive and a negative','Two anchors and one class label','An image, its mask and its box','A query, a database and a threshold'],a:0,e:'Triplet loss compares an anchor with a same-class positive and a different-class negative.'},
+ q9:{q:'Why must the verification threshold be selected on validation data rather than test data?',o:['Test data has no labels','Thresholds only work on training data','Tuning on test data leaks information and inflates the reported result','Validation data is always larger'],a:2,e:'Select on validation, then report on held-out test pairs, so the test result stays an honest estimate.'},
+ q10:{q:'What architecture does a standard Siamese network use in this lesson?',o:['Two unrelated encoders with separate weights','A single softmax over all possible writers','A detector followed by a mask prediction head','One encoder applied to both inputs with shared weights'],a:3,e:'The same encoder processes both inputs and shares its weights, so their embeddings can be compared.'}
+};
+$$('[data-quiz]').forEach(host=>{const q=QZ[host.dataset.quiz],name='qz-'+host.dataset.quiz;const fb=h('div',{class:'qfb',role:'status','aria-live':'polite'}),fs=h('fieldset',{},h('legend',{class:'sr'},q.q));
+  q.o.forEach((t,i)=>{const id=name+i,inp=h('input',{type:'radio',name,id}),row=h('div',{class:'qo'},inp,h('label',{for:id},t));
+    inp.addEventListener('change',()=>{$$('.qo',fs).forEach(r=>r.classList.remove('right','wrong'));if(i===q.a){row.classList.add('right');fb.innerHTML='<b>Correct.</b> '+q.e;$$('input',fs).forEach(x=>x.disabled=true);}else{row.classList.add('wrong');fb.innerHTML='<b>Not quite.</b> Try another option.';}});fs.append(row);});
+  host.append(h('p',{class:'ql'},'Check yourself'),h('p',{class:'qt'},q.q),fs,fb);});
+
+/* flashcards */
+[['Why is verification different from multi-class classification?','Verification compares two samples (one-to-one) to decide same/different; a classifier assigns one of a fixed set of labels and is tied to the identities it saw in training.'],
+ ['What does weight sharing mean in a Siamese network?','The same encoder, with the same weights, processes both inputs, so both embeddings live in the same feature space.'],
+ ['Why compare embeddings rather than final class probabilities?','Embeddings can be compared for any pair, including unseen identities; class probabilities are tied to a fixed set of classes.'],
+ ['Explain Euclidean distance in embedding space.','The square root of the summed squared differences between two embedding vectors. Smaller means more similar; identical vectors give 0. It is not a calibrated probability.'],
+ ['In contrastive loss, what does the margin control?','How far apart negative pairs must be: a negative pair already beyond the margin contributes zero loss.'],
+ ['What is the difference between contrastive loss and triplet loss?','Contrastive optimizes labelled pairs; triplet optimizes relative distances so that anchor–positive is smaller than anchor–negative by a margin.'],
+ ['Explain anchor, positive and negative samples.','Anchor: the reference. Positive: another genuine signature of the same writer. Negative: a forged or different-writer sample.'],
+ ['What are easy, hard and semi-hard negatives?','Easy: far from the anchor, loss often zero. Hard: closer than the positive, informative but possibly noisy. Semi-hard: farther than the positive but within the margin.'],
+ ['Why must the verification threshold be selected on validation data?','To avoid test leakage: tune on validation, then report the held-out test result.'],
+ ['Why can accuracy be insufficient for a biometric verification system?','A single score can hide an unacceptable trade-off between accepting forgeries and rejecting genuine signatures.'],
+ ['What are FAR and FRR, and how do they trade off?','FAR: different/forged pairs wrongly accepted. FRR: genuine/same pairs wrongly rejected. Lowering FAR usually raises FRR; the operating point depends on risk tolerance.'],
+ ['Why split by writer before pair generation?','Otherwise the same writer can appear in both train and test, creating identity leakage.'],
+ ['In 4–5 sentences: how does a Siamese network verify a signature, why is a threshold needed, and why is it not an unquestionable identity authority?','Cover: shared encoder → embeddings → distance; threshold turns distance into a decision; the system is decision support and must not be the sole basis for high-stakes decisions.']
+].forEach(([q,a])=>{const b=h('button',{type:'button',class:'fc','aria-expanded':'false',style:'min-height:110px'},h('div',{class:'q'},q),h('span',{class:'hint'},'Click to reveal'),h('div',{class:'a'},a));b.addEventListener('click',()=>b.setAttribute('aria-expanded',String(b.getAttribute('aria-expanded')!=='true')));$('#fcs').append(b);});
+</script>
+</body>
+</html>
